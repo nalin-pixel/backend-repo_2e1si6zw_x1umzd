@@ -1,8 +1,10 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 
-app = FastAPI()
+app = FastAPI(title="Streams of Life International API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,7 +16,7 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello from FastAPI Backend!"}
+    return {"message": "Streams of Life International API running"}
 
 @app.get("/api/hello")
 def hello():
@@ -63,6 +65,17 @@ def test_database():
     response["database_name"] = "✅ Set" if os.getenv("DATABASE_NAME") else "❌ Not Set"
     
     return response
+
+# Simple contact message intake (no persistence required for now)
+class ContactMessage(BaseModel):
+    name: str = Field(..., min_length=2, max_length=100)
+    email: EmailStr
+    message: str = Field(..., min_length=10, max_length=2000)
+
+@app.post("/api/contact")
+def submit_contact(message: ContactMessage):
+    # In a real app, persist to DB or send email. For now, acknowledge receipt.
+    return {"status": "ok", "detail": "Message received", "data": message.model_dump()}
 
 
 if __name__ == "__main__":
